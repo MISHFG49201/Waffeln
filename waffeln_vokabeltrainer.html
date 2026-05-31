@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waffeln backen – Vokabeltrainer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, serif; background: #fdf8f0; color: #2a2a2a; min-height: 100vh; }
+.app { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.header { text-align: center; margin-bottom: 1.5rem; padding: 1.5rem; background: #fff; border-radius: 16px; border: 2px solid #e8d5b0; }
+.header h1 { font-size: 26px; font-weight: bold; color: #5a3010; }
+.header p { font-size: 14px; color: #8a6040; margin-top: 6px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 1rem; }
+.tab { font-size: 14px; padding: 8px 18px; border-radius: 20px; border: 2px solid #e8d5b0; background: #fff; cursor: pointer; color: #8a6040; font-family: Georgia, serif; transition: all 0.15s; }
+.tab.active { background: #c06020; color: #fff; border-color: #c06020; font-weight: bold; }
+.tab:hover:not(.active) { background: #fdf0e0; }
+.mode-btns { display: flex; gap: 8px; justify-content: center; margin-bottom: 1.25rem; }
+.mode-btn { font-size: 14px; padding: 8px 20px; border-radius: 10px; border: 2px solid #e8d5b0; background: #fff; cursor: pointer; color: #8a6040; font-family: Georgia, serif; transition: all 0.15s; }
+.mode-btn.active { background: #1D9E75; color: #fff; border-color: #1D9E75; font-weight: bold; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.flip-wrap { perspective: 600px; height: 175px; cursor: pointer; }
+.flip-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.45s ease; }
+.flip-wrap.flipped .flip-inner { transform: rotateY(180deg); }
+.flip-front, .flip-back {
+  position: absolute; inset: 0; backface-visibility: hidden;
+  border-radius: 14px; border: 2px solid #e8d5b0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px;
+}
+.flip-front { background: #fff; }
+.flip-back { background: #fdf0e0; transform: rotateY(180deg); }
+.card-svg { width: 90px; height: 90px; }
+.card-emoji-big { font-size: 58px; line-height: 1; }
+.card-tap { font-size: 11px; color: #b09070; margin-top: 8px; }
+.card-word { font-size: 16px; font-weight: bold; color: #5a3010; text-align: center; line-height: 1.3; }
+.card-article { font-size: 14px; color: #c06020; margin-top: 6px; font-style: italic; }
+.reveal-all-btn { display: block; margin: 1.25rem auto 0; padding: 10px 28px; border-radius: 10px; border: 2px solid #c06020; background: #fff; color: #c06020; font-size: 14px; font-family: Georgia, serif; cursor: pointer; transition: all 0.15s; }
+.reveal-all-btn:hover { background: #c06020; color: #fff; }
+.quiz-box { background: #fff; border: 2px solid #e8d5b0; border-radius: 16px; padding: 1.5rem; text-align: center; }
+.quiz-svg { width: 120px; height: 120px; margin: 0 auto 14px; display: block; }
+.quiz-emoji-big { font-size: 80px; display: block; margin-bottom: 14px; }
+.quiz-subtext { font-size: 14px; color: #8a6040; margin-bottom: 1.25rem; }
+.quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.quiz-opt { padding: 14px 8px; border-radius: 10px; border: 2px solid #e8d5b0; background: #fdf8f0; cursor: pointer; font-size: 14px; color: #2a2a2a; font-family: Georgia, serif; transition: all 0.15s; line-height: 1.3; }
+.quiz-opt:hover:not(:disabled) { border-color: #c06020; background: #fdf0e0; }
+.quiz-opt.correct { background: #d4f0e0; color: #0a6040; border-color: #1D9E75; font-weight: bold; }
+.quiz-opt.wrong { background: #fde0d8; color: #a03010; border-color: #D85A30; }
+.quiz-opt:disabled { cursor: default; }
+.quiz-feedback { margin-top: 1rem; font-size: 15px; font-weight: bold; min-height: 22px; }
+.quiz-feedback.ok { color: #1D9E75; }
+.quiz-feedback.fail { color: #D85A30; }
+.progress { display: flex; gap: 5px; justify-content: center; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.prog-dot { width: 12px; height: 12px; border-radius: 50%; background: #e8d5b0; }
+.prog-dot.done-ok { background: #1D9E75; }
+.prog-dot.done-fail { background: #D85A30; }
+.luecke-box { background: #fff; border: 2px solid #e8d5b0; border-radius: 16px; padding: 1.5rem; }
+.luecke-svg { width: 80px; height: 80px; display: block; margin-bottom: 10px; }
+.luecke-emoji { font-size: 48px; display: block; margin-bottom: 10px; }
+.luecke-sentence { font-size: 18px; line-height: 2.4; color: #2a2a2a; margin-bottom: 0.5rem; }
+.luecke-input { border: 2px solid #e8d5b0; border-radius: 8px; padding: 6px 12px; font-size: 16px; width: 190px; color: #2a2a2a; background: #fdf8f0; font-family: Georgia, serif; }
+.luecke-input.ok { border-color: #1D9E75; background: #d4f0e0; color: #0a6040; }
+.luecke-input.fail { border-color: #D85A30; background: #fde0d8; color: #a03010; }
+.luecke-hint { font-size: 14px; color: #8a6040; margin-top: 10px; min-height: 20px; font-weight: bold; }
+.check-btn { margin-top: 14px; padding: 10px 28px; border-radius: 10px; border: 2px solid #1D9E75; background: #1D9E75; color: #fff; font-size: 14px; font-family: Georgia, serif; cursor: pointer; transition: all 0.15s; }
+.check-btn:hover { background: #158a62; }
+.score-box { text-align: center; padding: 2rem; }
+.score-num { font-size: 52px; font-weight: bold; color: #5a3010; }
+.score-label { font-size: 16px; color: #8a6040; margin-top: 6px; }
+.score-stars { font-size: 36px; margin: 14px 0; }
+.again-btn { margin-top: 1.5rem; padding: 12px 32px; border-radius: 10px; border: 2px solid #c06020; background: #c06020; color: #fff; font-size: 15px; font-family: Georgia, serif; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>🧇 Waffeln backen</h1>
+    <p>Tippe auf eine Karte, um das Wort zu sehen</p>
+  </div>
+  <div class="tabs" id="cat-tabs"></div>
+  <div class="mode-btns">
+    <button class="mode-btn active" onclick="setMode('cards')">🃏 Karten</button>
+    <button class="mode-btn" onclick="setMode('quiz')">❓ Quiz</button>
+    <button class="mode-btn" onclick="setMode('luecke')">✏️ Lückentext</button>
+  </div>
+  <div id="content"></div>
+</div>
+
+<script>
+const svgs = {
+  waffeleisen: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="35" width="80" height="40" rx="6" fill="#c0824a" stroke="#7a4f2a" stroke-width="2"/>
+    <rect x="10" y="35" width="80" height="8" rx="3" fill="#a06030" stroke="#7a4f2a" stroke-width="1.5"/>
+    <line x1="30" y1="43" x2="30" y2="75" stroke="#7a4f2a" stroke-width="1.5"/>
+    <line x1="50" y1="43" x2="50" y2="75" stroke="#7a4f2a" stroke-width="1.5"/>
+    <line x1="70" y1="43" x2="70" y2="75" stroke="#7a4f2a" stroke-width="1.5"/>
+    <line x1="10" y1="56" x2="90" y2="56" stroke="#7a4f2a" stroke-width="1.5"/>
+    <rect x="38" y="18" width="24" height="18" rx="4" fill="#888" stroke="#555" stroke-width="1.5"/>
+    <circle cx="50" cy="27" r="4" fill="#e74" stroke="#a30" stroke-width="1"/>
+    <rect x="15" y="72" width="70" height="6" rx="3" fill="#888" stroke="#555" stroke-width="1.5"/>
+    <rect x="20" y="78" width="8" height="10" rx="2" fill="#666"/>
+    <rect x="72" y="78" width="8" height="10" rx="2" fill="#666"/>
+  </svg>`,
+  schuessel: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="72" rx="38" ry="8" fill="#ccc" opacity="0.3"/>
+    <path d="M14 50 Q14 78 50 78 Q86 78 86 50" fill="#e8d5b0" stroke="#b8956a" stroke-width="2.5"/>
+    <path d="M14 50 Q18 38 50 36 Q82 38 86 50" fill="#f5ead0" stroke="#b8956a" stroke-width="2.5"/>
+    <ellipse cx="50" cy="50" rx="36" ry="10" fill="none" stroke="#b8956a" stroke-width="2"/>
+    <ellipse cx="50" cy="49" rx="28" ry="6" fill="#fdf6e8" opacity="0.6"/>
+  </svg>`,
+  schneebesen: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <line x1="50" y1="10" x2="50" y2="45" stroke="#888" stroke-width="4" stroke-linecap="round"/>
+    <rect x="43" y="8" width="14" height="10" rx="5" fill="#aaa" stroke="#777" stroke-width="1.5"/>
+    <ellipse cx="50" cy="65" rx="18" ry="22" fill="none" stroke="#888" stroke-width="2.5"/>
+    <path d="M50 45 Q38 52 35 65 Q38 78 50 87" fill="none" stroke="#888" stroke-width="2"/>
+    <path d="M50 45 Q44 55 44 65 Q44 75 50 87" fill="none" stroke="#888" stroke-width="2"/>
+    <path d="M50 45 Q56 55 56 65 Q56 75 50 87" fill="none" stroke="#888" stroke-width="2"/>
+    <path d="M50 45 Q62 52 65 65 Q62 78 50 87" fill="none" stroke="#888" stroke-width="2"/>
+  </svg>`,
+  messbecher: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M28 20 L32 85 Q32 90 50 90 Q68 90 68 85 L72 20 Z" fill="#d0eaf8" stroke="#5599cc" stroke-width="2"/>
+    <path d="M28 20 L72 20" stroke="#5599cc" stroke-width="2"/>
+    <line x1="68" y1="40" x2="76" y2="40" stroke="#5599cc" stroke-width="2"/>
+    <line x1="67" y1="55" x2="73" y2="55" stroke="#5599cc" stroke-width="1.5"/>
+    <line x1="66" y1="70" x2="74" y2="70" stroke="#5599cc" stroke-width="2"/>
+    <text x="78" y="43" font-size="8" fill="#5599cc" font-family="sans-serif">1</text>
+    <text x="76" y="73" font-size="8" fill="#5599cc" font-family="sans-serif">½</text>
+    <path d="M28 20 Q20 20 18 28 L32 28" fill="#b0d8f0" stroke="#5599cc" stroke-width="1.5"/>
+    <path d="M28 20 L18 28" stroke="#5599cc" stroke-width="2"/>
+  </svg>`,
+  kelle: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <line x1="55" y1="15" x2="48" y2="62" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+    <rect x="48" y="10" width="14" height="12" rx="6" fill="#bbb" stroke="#888" stroke-width="1.5"/>
+    <ellipse cx="45" cy="72" rx="16" ry="12" fill="#c8c8c8" stroke="#888" stroke-width="2"/>
+    <ellipse cx="45" cy="70" rx="13" ry="9" fill="#ddd" opacity="0.7"/>
+  </svg>`,
+  handmixer: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="30" y="10" width="40" height="28" rx="8" fill="#eee" stroke="#aaa" stroke-width="2"/>
+    <rect x="36" y="15" width="28" height="16" rx="4" fill="#ddd" stroke="#bbb" stroke-width="1"/>
+    <circle cx="42" cy="23" r="4" fill="#e74" stroke="#c00" stroke-width="1"/>
+    <circle cx="58" cy="23" r="3" fill="#888" stroke="#666" stroke-width="1"/>
+    <rect x="38" y="38" width="24" height="14" rx="4" fill="#ccc" stroke="#aaa" stroke-width="1.5"/>
+    <line x1="42" y1="52" x2="38" y2="88" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <line x1="58" y1="52" x2="62" y2="88" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="38" cy="88" rx="5" ry="3" fill="#bbb" stroke="#888" stroke-width="1.5"/>
+    <ellipse cx="62" cy="88" rx="5" ry="3" fill="#bbb" stroke="#888" stroke-width="1.5"/>
+  </svg>`,
+  teigschaber: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="44" y="8" width="12" height="38" rx="6" fill="#f0a060" stroke="#c06020" stroke-width="2"/>
+    <rect x="30" y="44" width="40" height="30" rx="6" fill="#e85" stroke="#c06020" stroke-width="2"/>
+    <rect x="32" y="46" width="36" height="26" rx="5" fill="#f9a060" opacity="0.5"/>
+    <rect x="42" y="72" width="16" height="18" rx="5" fill="#e85" stroke="#c06020" stroke-width="2"/>
+  </svg>`,
+  schuerze: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M35 20 Q50 15 65 20 L68 35 Q68 38 65 38 L35 38 Q32 38 32 35 Z" fill="#4488cc" stroke="#2266aa" stroke-width="1.5"/>
+    <path d="M32 38 L20 95 L80 95 L68 38 Z" fill="#4488cc" stroke="#2266aa" stroke-width="1.5"/>
+    <line x1="20" y1="12" x2="35" y2="22" stroke="#2266aa" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="80" y1="12" x2="65" y2="22" stroke="#2266aa" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="38" y="55" width="24" height="18" rx="4" fill="#3377bb" stroke="#2266aa" stroke-width="1.5"/>
+  </svg>`,
+  mehl: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="28" y="30" width="44" height="55" rx="5" fill="#f5f0e8" stroke="#c8b89a" stroke-width="2"/>
+    <rect x="28" y="30" width="44" height="14" rx="5" fill="#e8dcc8" stroke="#c8b89a" stroke-width="2"/>
+    <path d="M36 24 Q50 18 64 24 L64 32 Q50 26 36 32 Z" fill="#d8c8aa" stroke="#c8b89a" stroke-width="1.5"/>
+    <text x="50" y="67" text-anchor="middle" font-size="11" font-weight="bold" fill="#a09070" font-family="sans-serif">MEHL</text>
+    <text x="50" y="79" text-anchor="middle" font-size="9" fill="#b0a080" font-family="sans-serif">1 kg</text>
+  </svg>`,
+  backpulver: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="28" y="25" width="44" height="60" rx="5" fill="#fff8f0" stroke="#e8a060" stroke-width="2"/>
+    <rect x="28" y="25" width="44" height="16" rx="5" fill="#e8a060" stroke="#e8a060" stroke-width="2"/>
+    <text x="50" y="37" text-anchor="middle" font-size="8" font-weight="bold" fill="white" font-family="sans-serif">BACK</text>
+    <text x="50" y="55" text-anchor="middle" font-size="8" font-weight="bold" fill="#e8a060" font-family="sans-serif">BACK-</text>
+    <text x="50" y="66" text-anchor="middle" font-size="8" font-weight="bold" fill="#e8a060" font-family="sans-serif">PULVER</text>
+    <circle cx="38" cy="76" r="3" fill="#e8a060" opacity="0.5"/>
+    <circle cx="50" cy="79" r="2" fill="#e8a060" opacity="0.4"/>
+    <circle cx="62" cy="76" r="2.5" fill="#e8a060" opacity="0.5"/>
+  </svg>`,
+  oel: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M42 15 Q50 10 58 15 L62 30 L65 75 Q65 88 50 88 Q35 88 35 75 L38 30 Z" fill="#f0d060" stroke="#c0a020" stroke-width="2"/>
+    <path d="M42 15 L58 15 L56 28 L44 28 Z" fill="#d8b840" stroke="#c0a020" stroke-width="1.5"/>
+    <ellipse cx="50" cy="15" rx="9" ry="4" fill="#e8c840" stroke="#c0a020" stroke-width="1.5"/>
+    <ellipse cx="50" cy="55" rx="10" ry="18" fill="#f8e888" opacity="0.5"/>
+  </svg>`,
+  vanillezucker: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="25" y="28" width="50" height="58" rx="5" fill="#fffde8" stroke="#c8a820" stroke-width="2"/>
+    <rect x="25" y="28" width="50" height="16" rx="5" fill="#c8a820" stroke="#c8a820" stroke-width="2"/>
+    <text x="50" y="40" text-anchor="middle" font-size="7" font-weight="bold" fill="white" font-family="sans-serif">VANILLE</text>
+    <text x="50" y="57" text-anchor="middle" font-size="8" fill="#8a6010" font-family="sans-serif">Vanille-</text>
+    <text x="50" y="68" text-anchor="middle" font-size="8" fill="#8a6010" font-family="sans-serif">zucker</text>
+    <line x1="32" y1="55" x2="38" y2="82" stroke="#8a6010" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="40" y1="52" x2="44" y2="82" stroke="#8a6010" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`,
+  sahne: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="30" y="40" width="40" height="45" rx="5" fill="#f0f0f0" stroke="#ccc" stroke-width="2"/>
+    <rect x="30" y="40" width="40" height="12" rx="5" fill="#e0e0e0" stroke="#ccc" stroke-width="2"/>
+    <rect x="38" y="28" width="24" height="14" rx="4" fill="#ddd" stroke="#bbb" stroke-width="1.5"/>
+    <ellipse cx="50" cy="28" rx="12" ry="4" fill="#ccc" stroke="#bbb" stroke-width="1.5"/>
+    <text x="50" y="65" text-anchor="middle" font-size="8" fill="#999" font-family="sans-serif">SAHNE</text>
+    <path d="M36 74 Q50 69 64 74" stroke="#ccc" stroke-width="1" fill="none"/>
+  </svg>`,
+  puderzucker: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect x="25" y="55" width="50" height="8" rx="2" fill="#e8e0d0" stroke="#c0b090" stroke-width="1.5"/>
+    <path d="M30 63 Q50 68 70 63 L68 80 Q50 85 32 80 Z" fill="#e8e0d0" stroke="#c0b090" stroke-width="1.5"/>
+    <circle cx="38" cy="48" r="3" fill="white" opacity="0.9"/>
+    <circle cx="50" cy="44" r="4" fill="white" opacity="0.9"/>
+    <circle cx="62" cy="47" r="3" fill="white" opacity="0.9"/>
+    <circle cx="44" cy="52" r="2" fill="white" opacity="0.8"/>
+    <circle cx="56" cy="51" r="2.5" fill="white" opacity="0.8"/>
+    <rect x="36" y="30" width="28" height="26" rx="4" fill="#f5f0e8" stroke="#c0b090" stroke-width="1.5"/>
+    <text x="50" y="47" text-anchor="middle" font-size="7" fill="#a09070" font-family="sans-serif">Puder-</text>
+    <text x="50" y="55" text-anchor="middle" font-size="7" fill="#a09070" font-family="sans-serif">zucker</text>
+  </svg>`
+};
+
+const data = {
+  "Zutaten": [
+    { de: "das Mehl",          short: "Mehl",          svgKey: "mehl" },
+    { de: "das Ei",            short: "Ei",             em: "🥚" },
+    { de: "die Milch",         short: "Milch",          em: "🥛" },
+    { de: "die Butter",        short: "Butter",         em: "🧈" },
+    { de: "das Backpulver",    short: "Backpulver",     svgKey: "backpulver" },
+    { de: "das Salz",          short: "Salz",           em: "🧂" },
+    { de: "der Zucker",        short: "Zucker",         em: "🍬" },
+    { de: "das Öl",            short: "Öl",             svgKey: "oel" },
+    { de: "der Vanillezucker", short: "Vanillezucker",  svgKey: "vanillezucker" },
+    { de: "die Sahne",         short: "Sahne",          svgKey: "sahne" },
+    { de: "der Puderzucker",   short: "Puderzucker",    svgKey: "puderzucker" },
+  ],
+  "Utensilien": [
+    { de: "das Waffeleisen",  short: "Waffeleisen",  svgKey: "waffeleisen" },
+    { de: "die Schüssel",     short: "Schüssel",     svgKey: "schuessel" },
+    { de: "der Schneebesen",  short: "Schneebesen",  svgKey: "schneebesen" },
+    { de: "der Messbecher",   short: "Messbecher",   svgKey: "messbecher" },
+    { de: "die Kelle",        short: "Kelle",        svgKey: "kelle" },
+    { de: "der Handmixer",    short: "Handmixer",    svgKey: "handmixer" },
+    { de: "der Teigschaber",  short: "Teigschaber",  svgKey: "teigschaber" },
+    { de: "die Schürze",      short: "Schürze",      svgKey: "schuerze" },
+  ],
+  "Verben": [
+    { de: "vermischen",  short: "vermischen",  em: "🔄" },
+    { de: "rühren",      short: "rühren",      em: "🥄" },
+    { de: "backen",      short: "backen",      em: "🔥" },
+    { de: "gießen",      short: "gießen",      em: "🫗" },
+    { de: "abwiegen",    short: "abwiegen",    em: "⚖️" },
+    { de: "warten",      short: "warten",      em: "⏳" },
+    { de: "einstecken",  short: "einstecken",  em: "🔌" },
+    { de: "servieren",   short: "servieren",   em: "🍽️" },
+  ],
+  "Zeitadverbien": [
+    { de: "zuerst",         short: "zuerst",         em: "1️⃣" },
+    { de: "dann",           short: "dann",           em: "2️⃣" },
+    { de: "danach",         short: "danach",         em: "▶️" },
+    { de: "anschließend",   short: "anschließend",   em: "🔜" },
+    { de: "währenddessen",  short: "währenddessen",  em: "⏱️" },
+    { de: "zum Schluss",    short: "zum Schluss",    em: "🏁" },
+    { de: "am Ende",        short: "am Ende",        em: "✅" },
+    { de: "sofort",         short: "sofort",         em: "⚡" },
+  ]
+};
+
+function visual(item, svgCls, emCls) {
+  if (item.svgKey) return `<div class="${svgCls}">${svgs[item.svgKey]}</div>`;
+  return `<span class="${emCls}">${item.em}</span>`;
+}
+
+let currentCat="Zutaten", currentMode="cards";
+let quizIdx=0,quizScore=0,quizResults=[],quizItems=[];
+let lueckeIdx=0,lueckeItems=[];
+let allFlipped=false;
+
+function buildTabs(){
+  document.getElementById('cat-tabs').innerHTML=Object.keys(data).map(c=>
+    `<button class="tab${c===currentCat?' active':''}" onclick="setCat('${c}')">${c}</button>`
+  ).join('');
+}
+function setCat(c){currentCat=c;quizIdx=0;quizScore=0;quizResults=[];quizItems=[];lueckeIdx=0;lueckeItems=[];allFlipped=false;buildTabs();render();}
+function setMode(m){currentMode=m;quizIdx=0;quizScore=0;quizResults=[];quizItems=[];lueckeIdx=0;lueckeItems=[];allFlipped=false;
+  document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',['cards','quiz','luecke'][i]===m));render();}
+function render(){if(currentMode==='cards')renderCards();else if(currentMode==='quiz')renderQuiz();else renderLuecke();}
+
+function renderCards(){
+  const items=data[currentCat];
+  document.getElementById('content').innerHTML=`
+    <div class="card-grid">
+      ${items.map((it,i)=>`
+        <div class="flip-wrap" id="fw${i}" onclick="flipCard(${i})">
+          <div class="flip-inner">
+            <div class="flip-front">
+              ${visual(it,'card-svg','card-emoji-big')}
+              <span class="card-tap">Tippen →</span>
+            </div>
+            <div class="flip-back">
+              <div class="card-word">${it.short}</div>
+              <div class="card-article">${it.de.split(' ')[0]}</div>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <button class="reveal-all-btn" onclick="flipAll()">${allFlipped?'Alle verbergen':'Alle aufdecken'}</button>`;
+}
+
+function flipCard(i){document.getElementById('fw'+i).classList.toggle('flipped');}
+function flipAll(){
+  allFlipped=!allFlipped;
+  data[currentCat].forEach((_,i)=>{const fw=document.getElementById('fw'+i);if(fw)allFlipped?fw.classList.add('flipped'):fw.classList.remove('flipped');});
+  document.querySelector('.reveal-all-btn').textContent=allFlipped?'Alle verbergen':'Alle aufdecken';
+}
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function renderQuiz(){
+  if(!quizItems.length)quizItems=shuffle(data[currentCat]);
+  if(quizIdx>=quizItems.length){renderScore();return;}
+  const item=quizItems[quizIdx];
+  const wrongs=shuffle(data[currentCat].filter(x=>x.de!==item.de)).slice(0,3).map(x=>x.short);
+  const options=shuffle([item.short,...wrongs]);
+  const dots=quizItems.map((_,i)=>{let cls='prog-dot';if(i<quizResults.length)cls+=quizResults[i]?' done-ok':' done-fail';return`<div class="${cls}"></div>`;}).join('');
+  document.getElementById('content').innerHTML=`
+    <div class="progress">${dots}</div>
+    <div class="quiz-box">
+      ${visual(item,'quiz-svg','quiz-emoji-big')}
+      <div class="quiz-subtext">Welches Wort passt zum Bild?</div>
+      <div class="quiz-options">
+        ${options.map(opt=>`<button class="quiz-opt" onclick="checkQuiz(this,${JSON.stringify(opt)},${JSON.stringify(item.short)})">${opt}</button>`).join('')}
+      </div>
+      <div class="quiz-feedback" id="qfb"></div>
+    </div>`;
+}
+
+function checkQuiz(btn,chosen,correct){
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  const ok=chosen===correct;
+  btn.classList.add(ok?'correct':'wrong');
+  if(!ok)document.querySelectorAll('.quiz-opt').forEach(b=>{if(b.textContent===correct)b.classList.add('correct');});
+  document.getElementById('qfb').textContent=ok?'✓ Richtig!':'✗ Richtig: '+correct;
+  document.getElementById('qfb').className='quiz-feedback '+(ok?'ok':'fail');
+  if(ok)quizScore++;
+  quizResults.push(ok);
+  setTimeout(()=>{quizIdx++;renderQuiz();},1300);
+}
+
+function renderScore(){
+  const pct=Math.round(quizScore/quizItems.length*100);
+  const stars=pct>=80?'⭐⭐⭐':pct>=50?'⭐⭐':'⭐';
+  const msg=pct>=80?'Super gemacht!':pct>=50?'Gut gemacht!':'Weiter üben!';
+  document.getElementById('content').innerHTML=`
+    <div class="quiz-box score-box">
+      <div class="score-stars">${stars}</div>
+      <div class="score-num">${quizScore}/${quizItems.length}</div>
+      <div class="score-label">${msg} (${pct}%)</div>
+      <button class="again-btn" onclick="resetQuiz()">Nochmal spielen</button>
+    </div>`;
+}
+function resetQuiz(){quizIdx=0;quizScore=0;quizResults=[];quizItems=[];renderQuiz();}
+
+const lueckeSentences={
+  "Zutaten":[
+    {text:"Du brauchst ___ für den Teig.",answer:"Mehl",svgKey:"mehl"},
+    {text:"Gib ___ in den Teig, damit er süß wird.",answer:"Zucker",em:"🍬"},
+    {text:"Rühre ___ unter, damit der Teig cremig wird.",answer:"Butter",em:"🧈"},
+    {text:"Gieße ___ dazu, damit der Teig flüssig wird.",answer:"Milch",em:"🥛"},
+    {text:"Streue ___ über die fertigen Waffeln.",answer:"Puderzucker",svgKey:"puderzucker"},
+    {text:"Gib ___ für einen feinen Duft in den Teig.",answer:"Vanillezucker",svgKey:"vanillezucker"},
+    {text:"Schlage die ___ steif und gib sie obendrauf.",answer:"Sahne",svgKey:"sahne"},
+  ],
+  "Utensilien":[
+    {text:"Der Teig wird im ___ gebacken.",answer:"Waffeleisen",svgKey:"waffeleisen"},
+    {text:"Rühre den Teig in einer großen ___.",answer:"Schüssel",svgKey:"schuessel"},
+    {text:"Mit dem ___ kannst du schnell rühren.",answer:"Handmixer",svgKey:"handmixer"},
+    {text:"Kratze den Teig mit dem ___ aus der Schüssel.",answer:"Teigschaber",svgKey:"teigschaber"},
+    {text:"Mit der ___ gießt du den Teig ins Eisen.",answer:"Kelle",svgKey:"kelle"},
+  ],
+  "Verben":[
+    {text:"Du musst alle Zutaten gut ___.",answer:"vermischen",em:"🔄"},
+    {text:"Den Teig in das heiße Eisen ___.",answer:"gießen",em:"🫗"},
+    {text:"Die Waffeln ca. 3 Minuten ___.",answer:"backen",em:"🔥"},
+    {text:"Das Mehl genau ___.",answer:"abwiegen",em:"⚖️"},
+    {text:"Das Waffeleisen ___, bevor du anfängst.",answer:"einstecken",em:"🔌"},
+  ],
+  "Zeitadverbien":[
+    {text:"___ das Waffeleisen einstecken.",answer:"Zuerst",em:"1️⃣"},
+    {text:"___ alle Zutaten in die Schüssel geben.",answer:"Dann",em:"2️⃣"},
+    {text:"___ den Teig ins Eisen gießen.",answer:"Anschließend",em:"🔜"},
+    {text:"___ die Waffeln servieren.",answer:"Zum Schluss",em:"🏁"},
+    {text:"___ den Teig gut rühren.",answer:"Währenddessen",em:"⏱️"},
+  ]
+};
+
+function renderLuecke(){
+  if(!lueckeItems.length)lueckeItems=shuffle(lueckeSentences[currentCat]||lueckeSentences["Zutaten"]);
+  if(lueckeIdx>=lueckeItems.length){
+    document.getElementById('content').innerHTML=`
+      <div class="quiz-box score-box">
+        <div class="score-stars">🎉</div><div class="score-num">Fertig!</div>
+        <div class="score-label">Alle Lückentexte geschafft!</div>
+        <button class="again-btn" onclick="resetLuecke()">Nochmal</button>
+      </div>`;
+    return;
+  }
+  const item=lueckeItems[lueckeIdx];
+  const vis=item.svgKey?`<div class="luecke-svg">${svgs[item.svgKey]}</div>`:`<span class="luecke-emoji">${item.em}</span>`;
+  const display=item.text.replace('___','<input class="luecke-input" id="linput" placeholder="?" autocomplete="off"/>');
+  document.getElementById('content').innerHTML=`
+    <div class="luecke-box">
+      <div style="font-size:13px;color:#8a6040;margin-bottom:10px">${lueckeIdx+1} / ${lueckeItems.length}</div>
+      ${vis}
+      <div class="luecke-sentence">${display}</div>
+      <div class="luecke-hint" id="lhint"></div>
+      <button class="check-btn" onclick="checkLuecke()">Überprüfen</button>
+    </div>`;
+  document.getElementById('linput').addEventListener('keydown',e=>{if(e.key==='Enter')checkLuecke();});
+}
+
+function checkLuecke(){
+  const inp=document.getElementById('linput');if(!inp)return;
+  inp.disabled=true;
+  const item=lueckeItems[lueckeIdx];
+  const ok=inp.value.trim().toLowerCase()===item.answer.toLowerCase();
+  inp.classList.add(ok?'ok':'fail');
+  const hint=document.getElementById('lhint');
+  hint.textContent=ok?'✓ Richtig!':'✗ Richtig wäre: '+item.answer;
+  hint.style.color=ok?'#1D9E75':'#D85A30';
+  const btn=document.querySelector('.check-btn');
+  if(btn){btn.textContent='Weiter →';btn.onclick=()=>{lueckeIdx++;renderLuecke();};}
+}
+function resetLuecke(){lueckeIdx=0;lueckeItems=[];renderLuecke();}
+
+buildTabs();render();
+</script>
+</body>
+</html>
